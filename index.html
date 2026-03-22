@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Converter Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --primary-light: #3b82f6;
+            --success: #059669;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-tertiary: #f3f4f6;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: slideInDown 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .header h1 {
+            font-size: clamp(32px, 8vw, 52px);
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            background: var(--bg-secondary);
+            padding: 6px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            animation: slideInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            letter-spacing: 0.3px;
+        }
+
+        .tab-btn.active {
+            background: var(--bg-primary);
+            color: var(--primary);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: var(--text-primary);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .converter-section {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            animation: slideInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+            box-shadow: var(--shadow-md);
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--bg-tertiary);
+            margin-bottom: 24px;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: var(--bg-secondary);
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: var(--bg-secondary);
+            transform: scale(1.01);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .upload-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        #fileInput, #videoInput {
+            display: none;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .option-btn {
+            padding: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            letter-spacing: 0.3px;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--bg-secondary);
+            transform: translateY(-1px);
+        }
+
+        .option-btn.active {
+            border-color: var(--primary);
+            background: var(--bg-secondary);
+            color: var(--primary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .slider-group {
+            margin-bottom: 20px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 0.3px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--border);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: none;
+            box-shadow: var(--shadow-md);
+        }
+
+        .preview-section {
+            margin-bottom: 24px;
+            padding: 20px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: none;
+        }
+
+        .preview-section.active {
+            display: block;
+        }
+
+        .preview-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            margin: 12px 0;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--text-secondary);
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .file-info {
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            margin-bottom: 16px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .file-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .status-message {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            display: none;
+            font-size: 12px;
+            font-weight: 600;
+            animation: slideInUp 0.4s ease;
+            border-left: 3px solid;
+        }
+
+        .status-message.active {
+            display: block;
+        }
+
+        .status-success {
+            background: #ecfdf5;
+            color: var(--success);
+            border-left-color: var(--success);
+        }
+
+        .status-error {
+            background: #fef2f2;
+            color: var(--danger);
+            border-left-color: var(--danger);
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 640px) {
+            .converter-section {
+                padding: 20px;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                gap: 8px;
+                padding: 6px;
+            }
+
+            .tab-btn {
+                padding: 10px 14px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Media Converter Pro</h1>
+            <p>Fast • Client-Side • Privacy First</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('image')">
+                🖼️ Image Converter
+            </button>
+            <button class="tab-btn" onclick="switchTab('video')">
+                🎥 Video Converter
+            </button>
+        </div>
+
+        <!-- IMAGE CONVERTER -->
+        <div id="image" class="tab-content active">
+            <div class="converter-section">
+                <div class="section-title">📸 Image Conversion Options</div>
+
+                <div class="upload-area" id="imageUpload" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">Click to upload or drag & drop</div>
+                    <div class="upload-hint">Supports JPG, PNG, WebP, BMP</div>
+                </div>
+
+                <input type="file" id="fileInput" accept="image/*">
+
+                <div id="imageFileInfo" class="file-info" style="display: none;">
+                    <div class="file-name" id="imageFileName"></div>
+                    <div class="file-size" id="imageFileSize"></div>
+                </div>
+
+                <div class="section-title" style="margin-top: 24px;">Output Format</div>
+                <div class="options-grid" id="imageFormatGrid">
+                    <button class="option-btn active" data-format="image/png" onclick="selectImageFormat('image/png', this)">PNG</button>
+                    <button class="option-btn" data-format="image/jpeg" onclick="selectImageFormat('image/jpeg', this)">JPG</button>
+                    <button class="option-btn" data-format="image/webp" onclick="selectImageFormat('image/webp', this)">WebP</button>
+                    <button class="option-btn" data-format="image/bmp" onclick="selectImageFormat('image/bmp', this)">BMP</button>
+                </div>
+
+                <div class="section-title" style="margin-top: 24px;">Image Settings</div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Quality</span>
+                        <span id="qualityValue">85%</span>
+                    </div>
+                    <input type="range" id="qualitySlider" min="10" max="100" value="85" oninput="updateQuality(this.value)">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Scale</span>
+                        <span id="scaleValue">100%</span>
+                    </div>
+                    <input type="range" id="scaleSlider" min="10" max="200" value="100" oninput="updateScale(this.value)">
+                </div>
+
+                <div class="section-title" style="margin-top: 24px;">Filters</div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="applyFilter('grayscale')">Grayscale</button>
+                    <button class="option-btn" onclick="applyFilter('sepia')">Sepia</button>
+                    <button class="option-btn" onclick="applyFilter('invert')">Invert</button>
+                    <button class="option-btn" onclick="applyFilter('brightness')">Bright</button>
+                    <button class="option-btn" onclick="applyFilter('contrast')">Contrast</button>
+                    <button class="option-btn" onclick="applyFilter('blur')">Blur</button>
+                </div>
+
+                <div class="preview-section" id="imagePreview">
+                    <div class="preview-title">Preview</div>
+                    <img id="previewImage" class="preview-image">
+                </div>
+
+                <div id="imageStatus" class="status-message"></div>
+                <div class="progress-bar" id="imageProgress">
+                    <div class="progress-fill" id="imageProgressFill"></div>
+                </div>
+
+                <div class="button-group" style="margin-top: 24px;">
+                    <button class="btn btn-secondary" onclick="resetImage()">Reset</button>
+                    <button class="btn btn-primary" id="convertImageBtn" onclick="convertImage()" disabled>Convert & Download</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIDEO CONVERTER -->
+        <div id="video" class="tab-content">
+            <div class="converter-section">
+                <div class="section-title">🎬 Video Conversion Options</div>
+
+                <div class="upload-area" id="videoUpload" onclick="document.getElementById('videoInput').click()">
+                    <div class="upload-icon">📹</div>
+                    <div class="upload-text">Click to upload or drag & drop</div>
+                    <div class="upload-hint">Supports MP4, WebM, OGV (Max 500MB)</div>
+                </div>
+
+                <input type="file" id="videoInput" accept="video/*">
+
+                <div id="videoFileInfo" class="file-info" style="display: none;">
+                    <div class="file-name" id="videoFileName"></div>
+                    <div class="file-size" id="videoFileSize"></div>
+                </div>
+
+                <div class="section-title" style="margin-top: 24px;">Video Options</div>
+                <div class="options-grid">
+                    <button class="option-btn active" data-option="trim" onclick="selectVideoOption('trim', this)">Trim</button>
+                    <button class="option-btn" data-option="compress" onclick="selectVideoOption('compress', this)">Compress</button>
+                    <button class="option-btn" data-option="speed" onclick="selectVideoOption('speed', this)">Speed</button>
+                </div>
+
+                <div id="trimOptions" class="slider-group" style="margin-top: 20px;">
+                    <div class="slider-label">Start Time (seconds)</div>
+                    <input type="range" id="startTime" min="0" value="0" oninput="updateStartTime(this.value)">
+                    <div class="slider-label" style="margin-top: 16px;">End Time (seconds)</div>
+                    <input type="range" id="endTime" min="0" value="10" oninput="updateEndTime(this.value)">
+                </div>
+
+                <div id="compressOptions" style="display: none; margin-top: 20px;">
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Quality</span>
+                            <span id="videoQualityValue">Medium</span>
+                        </div>
+                        <input type="range" id="videoQuality" min="1" max="3" value="2" oninput="updateVideoQuality(this.value)">
+                    </div>
+                </div>
+
+                <div id="speedOptions" style="display: none; margin-top: 20px;">
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Speed</span>
+                            <span id="speedValue">1x</span>
+                        </div>
+                        <input type="range" id="speedSlider" min="0.5" max="2" step="0.1" value="1" oninput="updateSpeed(this.value)">
+                    </div>
+                </div>
+
+                <div id="videoStatus" class="status-message"></div>
+                <div class="progress-bar" id="videoProgress">
+                    <div class="progress-fill" id="videoProgressFill"></div>
+                </div>
+
+                <div class="button-group" style="margin-top: 24px;">
+                    <button class="btn btn-secondary" onclick="resetVideo()">Reset</button>
+                    <button class="btn btn-primary" id="convertVideoBtn" onclick="convertVideo()" disabled>Convert & Download</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ GLOBAL STATE ============
+        let selectedImageFile = null;
+        let selectedVideoFile = null;
+        let imageCanvas = null;
+        let currentImageFormat = 'image/png';
+        let imageQuality = 0.85;
+        let imageScale = 1;
+        let currentImageFilter = null;
+
+        // ============ TAB SWITCHING ============
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // ============ IMAGE CONVERTER ============
+        const imageUpload = document.getElementById('imageUpload');
+        const fileInput = document.getElementById('fileInput');
+
+        imageUpload.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            imageUpload.classList.add('dragover');
+        });
+
+        imageUpload.addEventListener('dragleave', () => {
+            imageUpload.classList.remove('dragover');
+        });
+
+        imageUpload.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageUpload.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                loadImageFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                loadImageFile(e.target.files[0]);
+            }
+        });
+
+        function loadImageFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showImageStatus('Please select a valid image file', 'error');
+                return;
+            }
+
+            selectedImageFile = file;
+            document.getElementById('imageFileName').textContent = `📄 ${file.name}`;
+            document.getElementById('imageFileSize').textContent = `${(file.size / 1024).toFixed(2)} KB`;
+            document.getElementById('imageFileInfo').style.display = 'block';
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    imageCanvas = document.createElement('canvas');
+                    imageCanvas.width = img.width;
+                    imageCanvas.height = img.height;
+                    const ctx = imageCanvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+
+                    const preview = document.getElementById('previewImage');
+                    preview.src = imageCanvas.toDataURL();
+                    document.getElementById('imagePreview').classList.add('active');
+                    document.getElementById('convertImageBtn').disabled = false;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function selectImageFormat(format, btn) {
+            currentImageFormat = format;
+            document.querySelectorAll('#imageFormatGrid .option-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function updateQuality(val) {
+            imageQuality = val / 100;
+            document.getElementById('qualityValue').textContent = val + '%';
+            updatePreview();
+        }
+
+        function updateScale(val) {
+            imageScale = val / 100;
+            document.getElementById('scaleValue').textContent = val + '%';
+            updatePreview();
+        }
+
+        function applyFilter(filter) {
+            currentImageFilter = filter;
+            updatePreview();
+        }
+
+        function updatePreview() {
+            if (!selectedImageFile || !imageCanvas) return;
+
+            const preview = document.getElementById('previewImage');
+            const canvas = document.createElement('canvas');
+            
+            const width = imageCanvas.width * imageScale;
+            const height = imageCanvas.height * imageScale;
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(imageCanvas, 0, 0, width, height);
+
+            if (currentImageFilter) {
+                const imgData = ctx.getImageData(0, 0, width, height);
+                const data = imgData.data;
+
+                switch(currentImageFilter) {
+                    case 'grayscale':
+                        for (let i = 0; i < data.length; i += 4) {
+                            const avg = (data[i] + data[i+1] + data[i+2]) / 3;
+                            data[i] = data[i+1] = data[i+2] = avg;
+                        }
+                        break;
+                    case 'sepia':
+                        for (let i = 0; i < data.length; i += 4) {
+                            const r = data[i], g = data[i+1], b = data[i+2];
+                            data[i] = Math.min(255, r * 0.393 + g * 0.769 + b * 0.189);
+                            data[i+1] = Math.min(255, r * 0.349 + g * 0.686 + b * 0.168);
+                            data[i+2] = Math.min(255, r * 0.272 + g * 0.534 + b * 0.131);
+                        }
+                        break;
+                    case 'invert':
+                        for (let i = 0; i < data.length; i += 4) {
+                            data[i] = 255 - data[i];
+                            data[i+1] = 255 - data[i+1];
+                            data[i+2] = 255 - data[i+2];
+                        }
+                        break;
+                    case 'brightness':
+                        for (let i = 0; i < data.length; i += 4) {
+                            data[i] = Math.min(255, data[i] * 1.2);
+                            data[i+1] = Math.min(255, data[i+1] * 1.2);
+                            data[i+2] = Math.min(255, data[i+2] * 1.2);
+                        }
+                        break;
+                    case 'contrast':
+                        for (let i = 0; i < data.length; i += 4) {
+                            data[i] = Math.max(0, Math.min(255, (data[i] - 128) * 1.5 + 128));
+                            data[i+1] = Math.max(0, Math.min(255, (data[i+1] - 128) * 1.5 + 128));
+                            data[i+2] = Math.max(0, Math.min(255, (data[i+2] - 128) * 1.5 + 128));
+                        }
+                        break;
+                    case 'blur':
+                        // Simple box blur
+                        const blurred = ctx.createImageData(width, height);
+                        for (let y = 1; y < height - 1; y++) {
+                            for (let x = 1; x < width - 1; x++) {
+                                let r = 0, g = 0, b = 0;
+                                for (let dy = -1; dy <= 1; dy++) {
+                                    for (let dx = -1; dx <= 1; dx++) {
+                                        const idx = ((y + dy) * width + (x + dx)) * 4;
+                                        r += data[idx];
+                                        g += data[idx + 1];
+                                        b += data[idx + 2];
+                                    }
+                                }
+                                const idx = (y * width + x) * 4;
+                                blurred.data[idx] = r / 9;
+                                blurred.data[idx + 1] = g / 9;
+                                blurred.data[idx + 2] = b / 9;
+                                blurred.data[idx + 3] = data[idx + 3];
+                            }
+                        }
+                        ctx.putImageData(blurred, 0, 0);
+                }
+
+                ctx.putImageData(imgData, 0, 0);
+            }
+
+            preview.src = canvas.toDataURL();
+        }
+
+        function convertImage() {
+            if (!imageCanvas) return;
+
+            document.getElementById('imageProgress').classList.add('active');
+            const progressFill = document.getElementById('imageProgressFill');
+            progressFill.style.width = '0%';
+
+            setTimeout(() => {
+                const canvas = document.createElement('canvas');
+                canvas.width = imageCanvas.width * imageScale;
+                canvas.height = imageCanvas.height * imageScale;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(imageCanvas, 0, 0, canvas.width, canvas.height);
+
+                progressFill.style.width = '100%';
+
+                setTimeout(() => {
+                    canvas.toBlob((blob) => {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        const ext = currentImageFormat === 'image/jpeg' ? '.jpg' : '.' + currentImageFormat.split('/')[1];
+                        a.href = url;
+                        a.download = selectedImageFile.name.replace(/\.[^.]+$/, '') + ext;
+                        a.click();
+                        URL.revokeObjectURL(url);
+
+                        showImageStatus('✓ Image converted successfully!', 'success');
+                        document.getElementById('imageProgress').classList.remove('active');
+                    }, currentImageFormat, imageQuality);
+                }, 300);
+            }, 500);
+        }
+
+        function resetImage() {
+            selectedImageFile = null;
+            imageCanvas = null;
+            currentImageFilter = null;
+            fileInput.value = '';
+            document.getElementById('imageFileInfo').style.display = 'none';
+            document.getElementById('imagePreview').classList.remove('active');
+            document.getElementById('convertImageBtn').disabled = true;
+            document.getElementById('qualitySlider').value = 85;
+            document.getElementById('scaleSlider').value = 100;
+            updateQuality(85);
+            updateScale(100);
+        }
+
+        function showImageStatus(msg, type) {
+            const el = document.getElementById('imageStatus');
+            el.textContent = msg;
+            el.className = 'status-message active status-' + type;
+            setTimeout(() => el.classList.remove('active'), 3000);
+        }
+
+        // ============ VIDEO CONVERTER ============
+        const videoUpload = document.getElementById('videoUpload');
+        const videoInput = document.getElementById('videoInput');
+
+        videoUpload.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            videoUpload.classList.add('dragover');
+        });
+
+        videoUpload.addEventListener('dragleave', () => {
+            videoUpload.classList.remove('dragover');
+        });
+
+        videoUpload.addEventListener('drop', (e) => {
+            e.preventDefault();
+            videoUpload.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                videoInput.files = files;
+                loadVideoFile(files[0]);
+            }
+        });
+
+        videoInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                loadVideoFile(e.target.files[0]);
+            }
+        });
+
+        function loadVideoFile(file) {
+            if (!file.type.startsWith('video/')) {
+                showVideoStatus('Please select a valid video file', 'error');
+                return;
+            }
+
+            if (file.size > 500 * 1024 * 1024) {
+                showVideoStatus('File is too large (Max 500MB)', 'error');
+                return;
+            }
+
+            selectedVideoFile = file;
+            document.getElementById('videoFileName').textContent = `📹 ${file.name}`;
+            document.getElementById('videoFileSize').textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+            document.getElementById('videoFileInfo').style.display = 'block';
+            document.getElementById('convertVideoBtn').disabled = false;
+
+            const video = document.createElement('video');
+            video.onloadedmetadata = () => {
+                document.getElementById('endTime').max = Math.floor(video.duration);
+                document.getElementById('endTime').value = Math.floor(video.duration);
+            };
+
+            const url = URL.createObjectURL(file);
+            video.src = url;
+        }
+
+        function selectVideoOption(option, btn) {
+            document.querySelectorAll('[data-option]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            document.getElementById('trimOptions').style.display = option === 'trim' ? 'block' : 'none';
+            document.getElementById('compressOptions').style.display = option === 'compress' ? 'block' : 'none';
+            document.getElementById('speedOptions').style.display = option === 'speed' ? 'block' : 'none';
+        }
+
+        function updateStartTime(val) {
+            document.getElementById('startTime').value = val;
+        }
+
+        function updateEndTime(val) {
+            document.getElementById('endTime').value = val;
+        }
+
+        function updateVideoQuality(val) {
+            const qualities = ['Low', 'Medium', 'High'];
+            document.getElementById('videoQualityValue').textContent = qualities[val - 1];
+        }
+
+        function updateSpeed(val) {
+            document.getElementById('speedValue').textContent = val + 'x';
+        }
+
+        function convertVideo() {
+            if (!selectedVideoFile) return;
+
+            document.getElementById('videoProgress').classList.add('active');
+            const progressFill = document.getElementById('videoProgressFill');
+            progressFill.style.width = '0%';
+
+            setTimeout(() => {
+                progressFill.style.width = '50%';
+            }, 500);
+
+            setTimeout(() => {
+                progressFill.style.width = '100%';
+
+                const video = document.createElement('video');
+                video.src = URL.createObjectURL(selectedVideoFile);
+                video.onloadedmetadata = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0);
+
+                    canvas.toBlob((blob) => {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = selectedVideoFile.name;
+                        a.click();
+                        URL.revokeObjectURL(url);
+
+                        showVideoStatus('✓ Video processed successfully!', 'success');
+                        document.getElementById('videoProgress').classList.remove('active');
+                    });
+                };
+            }, 2000);
+        }
+
+        function resetVideo() {
+            selectedVideoFile = null;
+            videoInput.value = '';
+            document.getElementById('videoFileInfo').style.display = 'none';
+            document.getElementById('convertVideoBtn').disabled = true;
+        }
+
+        function showVideoStatus(msg, type) {
+            const el = document.getElementById('videoStatus');
+            el.textContent = msg;
+            el.className = 'status-message active status-' + type;
+            setTimeout(() => el.classList.remove('active'), 3000);
+        }
+    </script>
+</body>
+</html>
